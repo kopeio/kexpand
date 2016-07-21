@@ -1,0 +1,15 @@
+[submodule "_vendor/github.com/ghodss/yaml"]
+	path = _vendor/github.com/ghodss/yaml
+	url = https://github.com/ghodss/yaml
+[submodule "_vendor/github.com/cloudfoundry-incubator/candiedyaml"]
+	path = _vendor/github.com/cloudfoundry-incubator/candiedyaml
+	url = https://github.com/cloudfoundry-incubator/candiedyaml
+[submodule "_vendor/github.com/golang/glog"]
+	path = _vendor/github.com/golang/glog
+	url = https://github.com/golang/glog
+[submodule "_vendor/github.com/spf13/cobra"]
+	path = _vendor/github.com/spf13/cobra
+	url = https://github.com/spf13/cobra
+[submodule "_vendor/github.com/spf13/pflag"]
+	path = _vendor/github.com/spf13/pflag
+	url = https://github.com/spf13/pflag
