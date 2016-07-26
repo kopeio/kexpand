@@ -72,7 +72,7 @@ func (c *ExpandCmd) Run(args []string) error {
 	expanded := src
 	{
 		// quoted form: $(key) => "value"
-		re := regexp.MustCompile(`\$\([a-z]+\)`)
+		re := regexp.MustCompile(`\$\([a-z_\.]+\)`)
 		expandFunction := func(match []byte) []byte {
 			if match[0] != '$' || match[1] != '(' || match[len(match)-1] != ')' {
 				glog.Fatalf("unexpected match: %q", string(match))
@@ -96,7 +96,7 @@ func (c *ExpandCmd) Run(args []string) error {
 	{
 		// unquoted form: $((key)) => value
 
-		re := regexp.MustCompile(`\$\(\([a-z]+\)\)`)
+		re := regexp.MustCompile(`\$\(\([a-z_\.]+\)\)`)
 		expandFunction := func(match []byte) []byte {
 			if match[0] != '$' || match[1] != '(' || match[2] != '(' || match[len(match)-1] != ')' || match[len(match)-2] != ')' {
 				glog.Fatalf("unexpected match: %q", string(match))
@@ -120,7 +120,7 @@ func (c *ExpandCmd) Run(args []string) error {
 	{
 		// legacy form: {{key}} => value
 
-		re := regexp.MustCompile(`\{\{[a-z]+\}\}`)
+		re := regexp.MustCompile(`\{\{[a-z_\.]+\}\}`)
 		expandFunction := func(match []byte) []byte {
 			if match[0] != '{' || match[1] != '{' || match[len(match)-1] != '}' || match[len(match)-2] != '}' {
 				glog.Fatalf("unexpected match: %q", string(match))
