@@ -74,7 +74,7 @@ func (c *ExpandCmd) Run(args []string) error {
 
 	{
 		// All
-		expr := `\$(base64)?(\({1,2})([a-zA-Z0-9_\.\-]+)\){1,2}|(base64)?(\{{2})([a-zA-Z0-9_\.\-]+)\}{2}`
+		expr := `\$(base64)?(\({1,2})([[:alnum:]_\.\-]+)\){1,2}|(base64)?(\{{2})([[:alnum:]_\.\-]+)\}{2}`
 		re := regexp.MustCompile(expr)
 		expandFunction := func(match []byte) []byte {
 			re := regexp.MustCompile(expr)
