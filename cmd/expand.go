@@ -10,6 +10,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
+	"encoding/base64"
 )
 
 type ExpandCmd struct {
@@ -70,68 +71,48 @@ func (c *ExpandCmd) Run(args []string) error {
 	}
 
 	expanded := src
-	{
-		// quoted form: $(key) => "value"
-		re := regexp.MustCompile(`\$\([[:alnum:]_\.\-]+\)`)
-		expandFunction := func(match []byte) []byte {
-			if match[0] != '$' || match[1] != '(' || match[len(match)-1] != ')' {
-				glog.Fatalf("unexpected match: %q", string(match))
-			}
-			key := string(match[2 : len(match)-1])
-			replacement := values[key]
-			if replacement == nil {
-				err = fmt.Errorf("key not found: %q", key)
-				return match
-			}
-			s := fmt.Sprintf("\"%v\"", replacement)
-			return []byte(s)
-		}
-
-		expanded = re.ReplaceAllFunc(expanded, expandFunction)
-		if err != nil {
-			return err
-		}
-	}
 
 	{
-		// unquoted form: $((key)) => value
-
-		re := regexp.MustCompile(`\$\(\([[:alnum:]_\.\-]+\)\)`)
+		// All
+		expr := `\$(base64)?(\({1,2})([a-zA-Z0-9_\.\-]+)\){1,2}|(base64)?(\{{2})([a-zA-Z0-9_\.\-]+)\}{2}`
+		re := regexp.MustCompile(expr)
 		expandFunction := func(match []byte) []byte {
-			if match[0] != '$' || match[1] != '(' || match[2] != '(' || match[len(match)-1] != ')' || match[len(match)-2] != ')' {
-				glog.Fatalf("unexpected match: %q", string(match))
+			re := regexp.MustCompile(expr)
+
+			matchStr := string(match[:])
+			result := re.FindStringSubmatch(matchStr)
+
+			if result[0] != matchStr {
+				glog.Fatalf("Unexpected match: %q", matchStr)
 			}
-			key := string(match[3 : len(match)-2])
+
+			if result[3] == "" && result[6]== "" {
+				glog.Fatalf("No variable defined within: %q", matchStr)
+			}
+
+			key := result[3] + result[6]
 			replacement := values[key]
+
 			if replacement == nil {
-				err = fmt.Errorf("key not found: %q", key)
+				err = fmt.Errorf("Key not found: %q", key)
 				return match
 			}
-			s := fmt.Sprintf("%v", replacement)
-			return []byte(s)
-		}
 
-		expanded = re.ReplaceAllFunc(expanded, expandFunction)
-		if err != nil {
-			return err
-		}
-	}
-
-	{
-		// legacy form: {{key}} => value
-
-		re := regexp.MustCompile(`\{\{[[:alnum:]_\.\-]+\}\}`)
-		expandFunction := func(match []byte) []byte {
-			if match[0] != '{' || match[1] != '{' || match[len(match)-1] != '}' || match[len(match)-2] != '}' {
-				glog.Fatalf("unexpected match: %q", string(match))
+			if (result[1] + result[4]) == "base64" {
+				replacement = base64.StdEncoding.EncodeToString([]byte(replacement.(string)))
 			}
-			key := string(match[2 : len(match)-2])
-			replacement := values[key]
-			if replacement == nil {
-				err = fmt.Errorf("key not found: %q", key)
-				return match
+
+			var s string
+			delim := result[2] + result[5]
+			switch len(delim) {
+			case 1:
+				s = fmt.Sprintf("\"%v\"", replacement)
+			case 2:
+				s = fmt.Sprintf("%v", replacement)
+			default:
+				glog.Fatalf("Unexpected delimiter %q count: %q", delim, len(delim))
 			}
-			s := fmt.Sprintf("%v", replacement)
+
 			return []byte(s)
 		}
 

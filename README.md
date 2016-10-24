@@ -95,3 +95,10 @@ The result of expanding the template will be output to stdout, where it can be r
 kexpand supports two different forms of variables: `$((key))` will output a non-quoted value (`$((replicas))` => `3`),
 while `$(key)` will output a quoted value (`$(replicas)` => `"3"`). A legacy format, `{{key}}`, is also supported, but
 not recommended for use.
+
+## Variable names
+Variables names can include any alphanumeric character along with hypens(-), period(.), and underscores(_).
+
+## Base64 support.
+Base64 encoding of values in supported by using the formats `$base64(key)`, `$base64((key))`, and `base64{{key}}`.  This
+is useful for secret definitions.
