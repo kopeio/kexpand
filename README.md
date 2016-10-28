@@ -95,3 +95,70 @@ The result of expanding the template will be output to stdout, where it can be r
 kexpand supports two different forms of variables: `$((key))` will output a non-quoted value (`$((replicas))` => `3`),
 while `$(key)` will output a quoted value (`$(replicas)` => `"3"`). A legacy format, `{{key}}`, is also supported, but
 not recommended for use.
+
+## Multiline Expansion
+
+kexpand is primarily intended for simple variable replacement, but since it will replace any arbitrary string, multiline templates can also be achieved. This can be useful when you need to set to set several keys in one environment, but in another they are not present at all.
+
+deployment.yaml:
+
+```
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: $((name))
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: $((name))
+    spec:
+      containers:
+      - name: $((name))
+        image: some-image
+        ports:
+        - containerPort: 80
+        env:
+        $((aws_access_keys))
+```
+
+values.yaml:
+
+```
+name: my-app
+aws_access_keys: |-
+  - name: AWS_ACCESS_KEY_ID
+        value: fake
+        - name: AWS_SECRET_ACCESS_KEY
+        value: fake
+```
+
+`kexpand expand deployment.yaml -f values.yaml`:
+
+```
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app
+        image: some-image
+        ports:
+        - containerPort: 80
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          value: fake
+        - name: AWS_SECRET_ACCESS_KEY
+          value: fake
+```
+
+Note that for this to work you must use `$((var))` style replacement, since `$(var)` will result in quotes that break the YAML. Additionally, you must handle proper indention levels yourself, since kexpand will just take the entire string as is.
+
