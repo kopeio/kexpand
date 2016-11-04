@@ -8,16 +8,15 @@ endif
 gocode:
 	GO15VENDOREXPERIMENT=1 go install -ldflags "-X main.BuildVersion=${VERSION}" github.com/kopeio/kexpand
 
+gocode_docker:
+	GO15VENDOREXPERIMENT=1 CGO_ENABLED=0 GOOS=linux go install -ldflags "-s -X main.BuildVersion=${VERSION}" -a -installsuffix cgo github.com/kopeio/kexpand
+
 gofmt:
 	gofmt -w -s main.go
 	gofmt -w -s cmd
 
-
-builder-image:
-	docker build -f images/kexpand-builder/Dockerfile -t kexpand-builder .
-
-build-in-docker: builder-image
-	docker run -it -v `pwd`:/src kexpand-builder /onbuild.sh
+build-in-docker:
+	docker run -it -v `pwd`:/src golang:1.7 /src/images/kexpand/onbuild.sh
 
 image: build-in-docker
 	docker build -t ${DOCKER_REGISTRY}/kexpand  -f images/kexpand/Dockerfile .
