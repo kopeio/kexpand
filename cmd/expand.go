@@ -7,10 +7,10 @@ import (
 	"regexp"
 	"strings"
 
+	"encoding/base64"
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
-	"encoding/base64"
 )
 
 type ExpandCmd struct {
@@ -74,7 +74,7 @@ func (c *ExpandCmd) Run(args []string) error {
 
 	{
 		// All
-		expr := `\$(base64)?(\({1,2})([[:alnum:]_\.\-]+)\){1,2}|(base64)?(\{{2})([[:alnum:]_\.\-]+)\}{2}`
+		expr := `\$(\({1,2})([[:alnum:]_\.\-]+)(\|base64)?\){1,2}|(\{{2})([[:alnum:]_\.\-]+)(\|base64)?\}{2}`
 		re := regexp.MustCompile(expr)
 		expandFunction := func(match []byte) []byte {
 			re := regexp.MustCompile(expr)
@@ -86,11 +86,11 @@ func (c *ExpandCmd) Run(args []string) error {
 				glog.Fatalf("Unexpected match: %q", matchStr)
 			}
 
-			if result[3] == "" && result[6]== "" {
+			if result[2] == "" && result[5] == "" {
 				glog.Fatalf("No variable defined within: %q", matchStr)
 			}
 
-			key := result[3] + result[6]
+			key := result[2] + result[5]
 			replacement := values[key]
 
 			if replacement == nil {
@@ -98,12 +98,12 @@ func (c *ExpandCmd) Run(args []string) error {
 				return match
 			}
 
-			if (result[1] + result[4]) == "base64" {
+			if (result[3] + result[6]) == "|base64" {
 				replacement = base64.StdEncoding.EncodeToString([]byte(replacement.(string)))
 			}
 
 			var s string
-			delim := result[2] + result[5]
+			delim := result[1] + result[4]
 			switch len(delim) {
 			case 1:
 				s = fmt.Sprintf("\"%v\"", replacement)

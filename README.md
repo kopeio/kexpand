@@ -100,5 +100,5 @@ not recommended for use.
 Variables names can include any alphanumeric character along with hypens(-), period(.), and underscores(_).
 
 ## Base64 support.
-Base64 encoding of values in supported by using the formats `$base64(key)`, `$base64((key))`, and `base64{{key}}`.  This
+Base64 encoding of values is supported by adding `|base64` to the key as in `$(key|base64)`, `$((key|base64))`, and `{{keyi|base64}}`.  This
 is useful for secret definitions.
