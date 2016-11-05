@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 
 	"encoding/base64"
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
+	"path/filepath"
 )
 
 type ExpandCmd struct {
@@ -83,6 +86,10 @@ func (c *ExpandCmd) Run(args []string) error {
 
 func (c *ExpandCmd) parseValues() (map[string]interface{}, error) {
 	values := make(map[string]interface{})
+
+	for k, v := range c.defaultValues() {
+		values[k] = v
+	}
 
 	for _, f := range c.SourceFiles {
 		b, err := ioutil.ReadFile(f)
@@ -181,4 +188,32 @@ func (c *ExpandCmd) DoExpand(src []byte, values map[string]interface{}) ([]byte,
 	}
 
 	return expanded, nil
+}
+
+func (c *ExpandCmd) defaultValues() map[string]interface{} {
+	defaults := make(map[string]interface{})
+
+	t := time.Now()
+	defaults["ansicdate"] = t.Format(time.ANSIC)
+	defaults["ansicdateutc"] = t.UTC().Format(time.ANSIC)
+	defaults["rubydate"] = t.Format(time.RubyDate)
+	defaults["rubydateutc"] = t.UTC().Format(time.RubyDate)
+	defaults["unixdate"] = t.Format(time.UnixDate)
+	defaults["unixdateutc"] = t.UTC().Format(time.UnixDate)
+	defaults["unixtime"] = t.Unix()
+	defaults["unixtimeutc"] = t.UTC().Unix()
+
+	wd, err := os.Getwd()
+	if err == nil {
+		defaults["basename"] = filepath.Base(wd)
+		defaults["dirname"] = filepath.Dir(wd)
+	}
+
+	gitsha, err := exec.Command("git","rev-parse","HEAD").Output()
+	if err == nil {
+		defaults["gitsha"] = strings.TrimSpace(string(gitsha[:]))
+		defaults["gitshashort"] = string(gitsha[:7])
+	}
+
+	return defaults
 }
