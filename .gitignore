@@ -3,3 +3,12 @@ vendor/
 
 *.iml
 .idea/
+
+# Bazel
+bazel-bin
+bazel-genfiles
+bazel-kexpand
+bazel-out
+bazel-testlogs
+
+

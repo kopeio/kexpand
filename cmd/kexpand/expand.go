@@ -1,16 +1,15 @@
-package cmd
+package main
 
 import (
+	"encoding/base64"
 	"fmt"
+	"github.com/ghodss/yaml"
+	"github.com/golang/glog"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
-
-	"encoding/base64"
-	"github.com/ghodss/yaml"
-	"github.com/golang/glog"
-	"github.com/spf13/cobra"
 )
 
 type ExpandCmd struct {

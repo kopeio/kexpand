@@ -1,11 +1,10 @@
-package cmd
+package main
 
 import (
 	goflag "flag"
 	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
+	"os"
 )
 
 type RootCmd struct {
