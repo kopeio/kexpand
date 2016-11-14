@@ -1,16 +1,14 @@
-package cmd
+package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"regexp"
-	"strings"
-
-	"encoding/base64"
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
+	"io/ioutil"
+	"os"
+	"strings"
+	"github.com/kopeio/kexpand/pkg/expand"
 )
 
 type ExpandCmd struct {
@@ -70,56 +68,9 @@ func (c *ExpandCmd) Run(args []string) error {
 		return fmt.Errorf("expected exactly one argument, a path to a file to expand")
 	}
 
-	expanded := src
-
-	{
-		// All
-		expr := `\$(\({1,2})([[:alnum:]_\.\-]+)(\|base64)?\){1,2}|(\{{2})([[:alnum:]_\.\-]+)(\|base64)?\}{2}`
-		re := regexp.MustCompile(expr)
-		expandFunction := func(match []byte) []byte {
-			re := regexp.MustCompile(expr)
-
-			matchStr := string(match[:])
-			result := re.FindStringSubmatch(matchStr)
-
-			if result[0] != matchStr {
-				glog.Fatalf("Unexpected match: %q", matchStr)
-			}
-
-			if result[2] == "" && result[5] == "" {
-				glog.Fatalf("No variable defined within: %q", matchStr)
-			}
-
-			key := result[2] + result[5]
-			replacement := values[key]
-
-			if replacement == nil {
-				err = fmt.Errorf("Key not found: %q", key)
-				return match
-			}
-
-			if (result[3] + result[6]) == "|base64" {
-				replacement = base64.StdEncoding.EncodeToString([]byte(replacement.(string)))
-			}
-
-			var s string
-			delim := result[1] + result[4]
-			switch len(delim) {
-			case 1:
-				s = fmt.Sprintf("\"%v\"", replacement)
-			case 2:
-				s = fmt.Sprintf("%v", replacement)
-			default:
-				glog.Fatalf("Unexpected delimiter %q count: %q", delim, len(delim))
-			}
-
-			return []byte(s)
-		}
-
-		expanded = re.ReplaceAllFunc(expanded, expandFunction)
-		if err != nil {
-			return err
-		}
+	expanded, err := expand.DoExpand(src, values)
+	if err != nil {
+		return err
 	}
 
 	_, err = os.Stdout.Write(expanded)

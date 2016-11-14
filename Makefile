@@ -1,3 +1,6 @@
+# TODO: Move entirely to bazel?
+.PHONY: images
+
 all: gocode
 
 DOCKER_REGISTRY=kopeio
@@ -6,24 +9,36 @@ ifndef VERSION
 endif
 
 gocode:
-	GO15VENDOREXPERIMENT=1 go install -ldflags "-X main.BuildVersion=${VERSION}" github.com/kopeio/kexpand
+	GO15VENDOREXPERIMENT=1 go install -ldflags "-X main.BuildVersion=${VERSION}" github.com/kopeio/kexpand/cmd/...
 
 gofmt:
-	gofmt -w -s main.go
 	gofmt -w -s cmd
-
-
-builder-image:
-	docker build -f images/kexpand-builder/Dockerfile -t kexpand-builder .
-
-build-in-docker: builder-image
-	docker run -it -v `pwd`:/src kexpand-builder /onbuild.sh
-
-image: build-in-docker
-	docker build -t ${DOCKER_REGISTRY}/kexpand  -f images/kexpand/Dockerfile .
-
-push: image
-	docker push ${DOCKER_REGISTRY}/kexpand
 
 syncdeps:
 	rsync -avz _vendor/ vendor/
+
+
+# --------------------------------------------------
+# Docker images
+
+push: images
+	docker push ${DOCKER_REGISTRY}/kexpand
+
+images:
+	bazel run //images:kexpand ${DOCKER_REGISTRY}/kexpand
+
+
+# --------------------------------------------------
+# Continuous integration targets
+
+ci: images test govet
+	echo "Done"
+
+govet:
+	go vet \
+	  github.com/kopeio/kexpand/cmd/...
+
+test:
+	bazel test //...
+	#go test github.com/kopeio/kexpand/cmd/...
+
