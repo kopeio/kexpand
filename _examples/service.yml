@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-svc
+  namespace: my-namespace
+  labels:
+    app: my-app
+    env: $((environment))
+    version: "${BUILD_NUMBER}"
+  annotations:
+    domainName: "$((environment))-my-app.my-domain.com"
+    commited_by: "${USER}"
+spec:
+  ports:
+    - name: http
+      protocol: "TCP"
+      port: 80
+      targetPort: 80
+  selector:
+    app: my-app
+  sessionAffinity: ClientIP
+  type: LoadBalancer
