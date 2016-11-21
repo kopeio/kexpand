@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/ghodss/yaml"
-	"github.com/golang/glog"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/a8m/envsubst"
+	"github.com/ghodss/yaml"
+	"github.com/golang/glog"
 	"github.com/kopeio/kexpand/pkg/expand"
+	"github.com/spf13/cobra"
 )
 
 type ExpandCmd struct {
@@ -69,6 +71,11 @@ func (c *ExpandCmd) Run(args []string) error {
 	}
 
 	expanded, err := expand.DoExpand(src, values)
+	if err != nil {
+		return err
+	}
+
+	expanded, err = envsubst.Bytes(expanded)
 	if err != nil {
 		return err
 	}
