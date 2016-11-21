@@ -59,3 +59,9 @@ new_go_repository(
     importpath = "gopkg.in/yaml.v2",
     commit = "a5b47d31c556af34a302ce5d659e6fea44d90de0",
 )
+
+new_go_repository(
+    name = "com_github_a8m_envsubst",
+    importpath = "github.com/a8m/envsubst",
+    commit = "c80d21b5d0cd710aeb86c602fdd75608b030e80a",
+)
