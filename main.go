@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/kopeio/kexpand/cmd"
+	"github.com/johnt337/kexpand/cmd"
 )
 
 func main() {

@@ -6,7 +6,7 @@ ifndef VERSION
 endif
 
 gocode:
-	GO15VENDOREXPERIMENT=1 go install -ldflags "-X main.BuildVersion=${VERSION}" github.com/kopeio/kexpand
+	GO15VENDOREXPERIMENT=1 go install -ldflags "-X main.BuildVersion=${VERSION}" github.com/johnt337/kexpand
 
 gofmt:
 	gofmt -w -s main.go
