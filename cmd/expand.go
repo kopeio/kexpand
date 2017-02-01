@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -13,7 +14,6 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
-	"path/filepath"
 )
 
 type ExpandCmd struct {
@@ -209,7 +209,7 @@ func (c *ExpandCmd) defaultValues() map[string]interface{} {
 		defaults["dirname"] = filepath.Dir(wd)
 	}
 
-	gitsha, err := exec.Command("git","rev-parse","HEAD").Output()
+	gitsha, err := exec.Command("git", "rev-parse", "HEAD").Output()
 	if err == nil {
 		defaults["gitsha"] = strings.TrimSpace(string(gitsha[:]))
 		defaults["gitshashort"] = string(gitsha[:7])
