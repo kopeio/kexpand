@@ -20,6 +20,7 @@ type ExpandCmd struct {
 	Values      []string
 
 	IgnoreMissingFiles bool
+	IgnoreMissingKeys bool
 }
 
 var expandCmd = ExpandCmd{
@@ -36,7 +37,7 @@ func init() {
 	cmd.Flags().StringSliceVarP(&expandCmd.SourceFiles, "file", "f", nil, "files containing values to substitute")
 	cmd.Flags().StringSliceVarP(&expandCmd.Values, "value", "k", nil, "key=value pairs to substitute")
 	cmd.Flags().BoolVarP(&expandCmd.IgnoreMissingFiles, "ignore-missing-files", "i", false, "ignore source files that are not found")
-
+	cmd.Flags().BoolVar(&expandCmd.IgnoreMissingKeys, "ignore-missing-keys", false, "ignore missing value keys that are not found")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		err := expandCmd.Run(args)
 		if err != nil {
@@ -94,7 +95,9 @@ func (c *ExpandCmd) Run(args []string) error {
 			replacement := values[key]
 
 			if replacement == nil {
-				err = fmt.Errorf("Key not found: %q", key)
+				if c.IgnoreMissingKeys == false {
+					err = fmt.Errorf("Key not found: %q", key)
+				}
 				return match
 			}
 
