@@ -6,6 +6,8 @@ export GOPATH=/go
 mkdir -p /go/src/github.com/kopeio
 ln -s /src/ /go/src/github.com/kopeio/kexpand
 
+go get -d github.com/kopeio/kexpand
+
 cd /go/src/github.com/kopeio/kexpand
 make gocode
 
