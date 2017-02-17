@@ -1,6 +1,19 @@
 ## Kexpand
 
 kexpand is a tool for expanding Kubernetes placeholder variables into their actual values.
+It implements the upcoming kubernetes templating specification client-side (with some extensions based
+on real-world requirements).
+
+You can use templates today, and when k8s implements it on the server, you should hopefully
+not have to rewrite your manifests.
+
+## Syntax
+
+quoted form: `$(key) => "value"`
+
+unquoted form: `$((key)) => value`
+
+## Example
 
 kexpand turns this:
 
