@@ -94,9 +94,9 @@ func (c *ExpandCmd) parseValues() (map[string]interface{}, error) {
 			return nil, fmt.Errorf("error reading file %q: %v", f, err)
 		}
 
-		data := make(map[string]interface{})
-		if err := yaml.Unmarshal(b, &data); err != nil {
-			return nil, fmt.Errorf("error parsing yaml file %q: %v", f, err)
+		data, err := parseYamlSource(f, b)
+		if err != nil {
+			return nil, err
 		}
 
 		for k, v := range data {
@@ -113,6 +113,14 @@ func (c *ExpandCmd) parseValues() (map[string]interface{}, error) {
 	}
 
 	return values, nil
+}
+
+func parseYamlSource(source string, b []byte) (map[string]interface{}, error) {
+	data := make(map[string]interface{})
+	if err := yaml.Unmarshal(b, &data); err != nil {
+		return nil, fmt.Errorf("error parsing yaml file %q: %v", source, err)
+	}
+	return data, nil
 }
 
 func (c *ExpandCmd) DoExpand(src []byte, values map[string]interface{}) ([]byte, error) {
@@ -173,5 +181,4 @@ func (c *ExpandCmd) DoExpand(src []byte, values map[string]interface{}) ([]byte,
 	}
 
 	return expanded, nil
-
 }
