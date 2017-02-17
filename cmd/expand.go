@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"encoding/base64"
+
+	"github.com/a8m/envsubst"
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
@@ -120,6 +122,10 @@ func (c *ExpandCmd) Run(args []string) error {
 		}
 
 		expanded = re.ReplaceAllFunc(expanded, expandFunction)
+		if err != nil {
+			return err
+		}
+		expanded, err = envsubst.Bytes(expanded)
 		if err != nil {
 			return err
 		}

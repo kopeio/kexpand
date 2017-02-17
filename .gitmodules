@@ -13,3 +13,6 @@
 [submodule "_vendor/github.com/spf13/pflag"]
 	path = _vendor/github.com/spf13/pflag
 	url = https://github.com/spf13/pflag
+[submodule "_vendor/github.com/a8m/envsubst"]
+	path = _vendor/github.com/a8m/envsubst
+	url = https://github.com/a8m/envsubst
