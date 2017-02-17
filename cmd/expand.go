@@ -20,7 +20,7 @@ type ExpandCmd struct {
 	Values      []string
 
 	IgnoreMissingFiles bool
-	IgnoreMissingKeys bool
+	IgnoreMissingKeys  bool
 }
 
 var expandCmd = ExpandCmd{
@@ -71,9 +71,56 @@ func (c *ExpandCmd) Run(args []string) error {
 		return fmt.Errorf("expected exactly one argument, a path to a file to expand")
 	}
 
+	expanded, err := c.DoExpand(src, values)
+
+	_, err = os.Stdout.Write(expanded)
+	if err != nil {
+		return fmt.Errorf("error writing to stdout: %v", err)
+	}
+
+	return nil
+}
+
+func (c *ExpandCmd) parseValues() (map[string]interface{}, error) {
+	values := make(map[string]interface{})
+
+	for _, f := range c.SourceFiles {
+		b, err := ioutil.ReadFile(f)
+		if err != nil {
+			if c.IgnoreMissingFiles && os.IsNotExist(err) {
+				fmt.Fprintf(os.Stderr, "Skipping missing file %q\n", f)
+				continue
+			}
+			return nil, fmt.Errorf("error reading file %q: %v", f, err)
+		}
+
+		data := make(map[string]interface{})
+		if err := yaml.Unmarshal(b, &data); err != nil {
+			return nil, fmt.Errorf("error parsing yaml file %q: %v", f, err)
+		}
+
+		for k, v := range data {
+			values[k] = v
+		}
+	}
+
+	for _, v := range c.Values {
+		tokens := strings.SplitN(v, "=", 2)
+		if len(tokens) != 2 {
+			return nil, fmt.Errorf("Unexpected value %q, expected key=value", v)
+		}
+		values[tokens[0]] = tokens[1]
+	}
+
+	return values, nil
+}
+
+func (c *ExpandCmd) DoExpand(src []byte, values map[string]interface{}) ([]byte, error) {
 	expanded := src
 
 	{
+		var err error
+
 		// All
 		expr := `\$(\({1,2})([[:alnum:]_\.\-]+)(\|base64)?\){1,2}|(\{{2})([[:alnum:]_\.\-]+)(\|base64)?\}{2}`
 		re := regexp.MustCompile(expr)
@@ -121,48 +168,10 @@ func (c *ExpandCmd) Run(args []string) error {
 
 		expanded = re.ReplaceAllFunc(expanded, expandFunction)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	_, err = os.Stdout.Write(expanded)
-	if err != nil {
-		return fmt.Errorf("error writing to stdout: %v", err)
-	}
+	return expanded, nil
 
-	return nil
-}
-
-func (c *ExpandCmd) parseValues() (map[string]interface{}, error) {
-	values := make(map[string]interface{})
-
-	for _, f := range c.SourceFiles {
-		b, err := ioutil.ReadFile(f)
-		if err != nil {
-			if c.IgnoreMissingFiles && os.IsNotExist(err) {
-				fmt.Fprintf(os.Stderr, "Skipping missing file %q\n", f)
-				continue
-			}
-			return nil, fmt.Errorf("error reading file %q: %v", f, err)
-		}
-
-		data := make(map[string]interface{})
-		if err := yaml.Unmarshal(b, &data); err != nil {
-			return nil, fmt.Errorf("error parsing yaml file %q: %v", f, err)
-		}
-
-		for k, v := range data {
-			values[k] = v
-		}
-	}
-
-	for _, v := range c.Values {
-		tokens := strings.SplitN(v, "=", 2)
-		if len(tokens) != 2 {
-			return nil, fmt.Errorf("Unexpected value %q, expected key=value", v)
-		}
-		values[tokens[0]] = tokens[1]
-	}
-
-	return values, nil
 }

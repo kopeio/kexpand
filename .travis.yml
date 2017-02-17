@@ -1,0 +1,12 @@
+language: go
+os: linux
+dist: trusty
+
+sudo: required
+
+before_script:
+     - wget "http://storage.googleapis.com/bazel-apt/pool/jdk1.8/b/bazel/bazel_0.4.0_amd64.deb"
+     - sudo dpkg --force-all -i bazel_0.4.0_amd64.deb
+
+script:
+  - make ci
