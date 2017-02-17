@@ -24,5 +24,17 @@ image: build-in-docker
 push: image
 	docker push ${DOCKER_REGISTRY}/kexpand
 
-syncdeps:
-	rsync -avz _vendor/ vendor/
+
+# --------------------------------------------------
+# Continuous integration targets
+
+ci: images test govet
+	echo "Done"
+
+govet:
+	go vet \
+	  github.com/kopeio/kexpand/cmd/...
+
+test:
+	go test github.com/kopeio/kexpand/cmd/...
+
