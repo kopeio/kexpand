@@ -1,6 +1,6 @@
-FROM debian:jessie
+FROM alpine:3.4
 
-COPY /.build/artifacts/kexpand /usr/bin/kexpand
+COPY /.build/artifacts/kexpand /kexpand
 
-CMD /usr/bin/kexpand
+CMD /kexpand
 
