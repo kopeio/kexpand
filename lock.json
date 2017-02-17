@@ -1,0 +1,50 @@
+{
+    "memo": "98022cc1c33fcfe3883ecceb3fbf33d7b4301794bc8e143ec58c9140650a20e4",
+    "projects": [
+        {
+            "name": "github.com/ghodss/yaml",
+            "revision": "73d445a93680fa1a78ae23a5839bad48f32ba1ee",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/golang/glog",
+            "revision": "44145f04b68cf362d9c4df2182967c2275eaefed",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/inconshreveable/mousetrap",
+            "branch": "master",
+            "revision": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/spf13/cobra",
+            "revision": "f62e98d28ab7ad31d707ba837a966378465c7b57",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/spf13/pflag",
+            "branch": "master",
+            "revision": "9ff6c6923cfffbcd502984b8e0c80539a94968b7",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "gopkg.in/yaml.v2",
+            "branch": "v2",
+            "revision": "a3f3340b5840cee44f372bddb5880fcbc419b46a",
+            "packages": [
+                "."
+            ]
+        }
+    ]
+}
