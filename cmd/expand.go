@@ -13,13 +13,16 @@ import (
 	"encoding/base64"
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
+	"github.com/kopeio/kexpand/pkg/source"
 	"github.com/spf13/cobra"
+	"path"
 )
 
 type ExpandCmd struct {
 	cobraCommand *cobra.Command
 
 	SourceFiles []string
+	BlobTrees   []string
 	Values      []string
 
 	IgnoreMissingFiles bool
@@ -38,6 +41,7 @@ func init() {
 	rootCommand.cobraCommand.AddCommand(cmd)
 
 	cmd.Flags().StringSliceVarP(&expandCmd.SourceFiles, "file", "f", nil, "files containing values to substitute")
+	cmd.Flags().StringSliceVarP(&expandCmd.BlobTrees, "tree", "t", nil, "directory tree of files")
 	cmd.Flags().StringSliceVarP(&expandCmd.Values, "value", "k", nil, "key=value pairs to substitute")
 	cmd.Flags().BoolVarP(&expandCmd.IgnoreMissingFiles, "ignore-missing-files", "i", false, "ignore source files that are not found")
 	cmd.Flags().BoolVar(&expandCmd.IgnoreMissingKeys, "ignore-missing-keys", false, "ignore missing value keys that are not found")
@@ -75,6 +79,9 @@ func (c *ExpandCmd) Run(args []string) error {
 	}
 
 	expanded, err := c.DoExpand(src, values)
+	if err != nil {
+		return fmt.Errorf("error expanding template: %v", err)
+	}
 
 	_, err = os.Stdout.Write(expanded)
 	if err != nil {
@@ -91,6 +98,18 @@ func (c *ExpandCmd) parseValues() (map[string]interface{}, error) {
 		values[k] = v
 	}
 
+	for _, f := range c.BlobTrees {
+		treeSource := &source.FiletreeSource{}
+		data, err := treeSource.Build(f, "file.")
+		if err != nil {
+			return nil, err
+		}
+
+		for k, v := range data {
+			values[k] = v
+		}
+	}
+
 	for _, f := range c.SourceFiles {
 		b, err := ioutil.ReadFile(f)
 		if err != nil {
@@ -101,9 +120,19 @@ func (c *ExpandCmd) parseValues() (map[string]interface{}, error) {
 			return nil, fmt.Errorf("error reading file %q: %v", f, err)
 		}
 
-		data, err := parseYamlSource(f, b)
-		if err != nil {
-			return nil, err
+		var data map[string]interface{}
+		name := strings.ToLower(path.Base(f))
+		if strings.HasSuffix(name, ".tfstate") {
+			tfParser := &source.TerraformSource{}
+			data, err = tfParser.Parse(b)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			data, err = parseYamlSource(f, b)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		for k, v := range data {
@@ -164,7 +193,11 @@ func (c *ExpandCmd) DoExpand(src []byte, values map[string]interface{}) ([]byte,
 			}
 
 			if (result[3] + result[6]) == "|base64" {
-				replacement = base64.StdEncoding.EncodeToString([]byte(replacement.(string)))
+				b, ok := replacement.([]byte)
+				if !ok {
+					b = []byte(replacement.(string))
+				}
+				replacement = base64.StdEncoding.EncodeToString(b)
 			}
 
 			var s string

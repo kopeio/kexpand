@@ -14,6 +14,7 @@ gocode_docker:
 gofmt:
 	gofmt -w -s main.go
 	gofmt -w -s cmd
+	gofmt -w -s pkg
 
 build-in-docker:
 	docker run -it -v `pwd`:/src golang:1.7 /src/images/kexpand/onbuild.sh
