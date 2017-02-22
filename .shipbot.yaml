@@ -1,0 +1,7 @@
+owner: kopeio
+repo: kexpand
+assets:
+  - source: .build/dist/darwin/amd64/kexpand
+    githubName: kexpand-darwin-amd64
+  - source: .build/dist/linux/amd64/kexpand
+    githubName: kexpand-linux-amd64
