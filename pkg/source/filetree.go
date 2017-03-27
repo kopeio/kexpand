@@ -28,19 +28,19 @@ func (t *FiletreeSource) addBlobs(dest map[string]interface{}, dir string, keyPr
 
 	for _, f := range files {
 		childKey := keyPrefix + f.Name()
+		childPath := path.Join(dir, f.Name())
 		if f.IsDir() {
-			err := t.addBlobs(dest, dir, childKey+".")
+			err := t.addBlobs(dest, childPath, childKey+".")
 			if err != nil {
 				return err
 			}
 		} else {
-			childPath := path.Join(dir, f.Name())
 			contents, err := ioutil.ReadFile(childPath)
 			if err != nil {
 				return fmt.Errorf("error reading file %q: %v", childPath, err)
 			}
 
-			dest[childKey] = contents
+			dest[childKey] = string(contents)
 		}
 	}
 
