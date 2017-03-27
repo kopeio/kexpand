@@ -44,6 +44,27 @@ func Test_Find(t *testing.T) {
 				"who": "world",
 			},
 		},
+		{
+			input:    "hello $(who|base64)",
+			expected: "hello \"d29ybGQ=\"",
+			values: map[string]interface{}{
+				"who": "world",
+			},
+		},
+		{
+			input:    "hello: $((who|yaml))",
+			expected: "hello: \"hello\\nworld of yaml\"",
+			values: map[string]interface{}{
+				"who": "hello\nworld of yaml",
+			},
+		},
+		{
+			input:    "hello: $(who|yaml)",
+			expected: "hello: \"\"hello\\nworld of yaml\"\"",
+			values: map[string]interface{}{
+				"who": "hello\nworld of yaml",
+			},
+		},
 	}
 
 	for i, spec := range grid {
@@ -54,7 +75,7 @@ func Test_Find(t *testing.T) {
 		}
 
 		if string(actual) != spec.expected {
-			t.Errorf("unexpected expansion; expected=%q; actual=%q", spec.expected, string(actual))
+			t.Errorf("unexpected expansion of %q; expected=%q; actual=%q", spec.input, spec.expected, string(actual))
 		}
 	}
 }

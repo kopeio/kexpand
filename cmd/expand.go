@@ -16,6 +16,7 @@ import (
 	"github.com/kopeio/kexpand/pkg/source"
 	"github.com/spf13/cobra"
 	"path"
+	"encoding/json"
 )
 
 type ExpandCmd struct {
@@ -166,7 +167,7 @@ func (c *ExpandCmd) DoExpand(src []byte, values map[string]interface{}) ([]byte,
 		var err error
 
 		// All
-		expr := `\$(\({1,2})([[:alnum:]_\.\-]+)(\|base64)?\){1,2}|(\{{2})([[:alnum:]_\.\-]+)(\|base64)?\}{2}`
+		expr := `\$(\({1,2})([[:alnum:]_\.\-]+)(\|[[:alnum:]]+)?\){1,2}|(\{{2})([[:alnum:]_\.\-]+)(\|[[:alnum:]]+)?\}{2}`
 		re := regexp.MustCompile(expr)
 		expandFunction := func(match []byte) []byte {
 			re := regexp.MustCompile(expr)
@@ -192,12 +193,27 @@ func (c *ExpandCmd) DoExpand(src []byte, values map[string]interface{}) ([]byte,
 				return match
 			}
 
-			if (result[3] + result[6]) == "|base64" {
-				b, ok := replacement.([]byte)
-				if !ok {
-					b = []byte(replacement.(string))
+			pipeFunction := result[3] + result[6]
+			if pipeFunction != "" {
+				if pipeFunction == "|base64" {
+					b, ok := replacement.([]byte)
+					if !ok {
+						b = []byte(replacement.(string))
+					}
+					replacement = base64.StdEncoding.EncodeToString(b)
+				} else if pipeFunction == "|yaml" {
+					b, ok := replacement.(string)
+					if !ok {
+						b = string(replacement.([]byte))
+					}
+					data, err := json.Marshal(b)
+					if err != nil {
+						glog.Fatalf("error converting to JSON/YAML: %v", err)
+					}
+					replacement = string(data)
+				} else {
+					glog.Fatalf("Unknown pipe function: %q", pipeFunction)
 				}
-				replacement = base64.StdEncoding.EncodeToString(b)
 			}
 
 			var s string
