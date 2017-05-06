@@ -2,7 +2,7 @@ all: gocode
 
 DOCKER_REGISTRY=kopeio
 UNIQUE:=$(shell date +%s)
-GOVERSION=1.7.4
+GOVERSION=1.8.1
 GITSHA := $(git describe --always)
 ifndef VERSION
   VERSION=0.2
@@ -41,7 +41,7 @@ gofmt:
 	gofmt -w -s pkg
 
 build-in-docker:
-	docker run -it -v `pwd`:/src golang:1.7 /src/images/kexpand/onbuild.sh
+	docker run -it -v `pwd`:/src golang:${GOVERSION} /src/images/kexpand/onbuild.sh
 
 image: build-in-docker
 	docker build -t ${DOCKER_REGISTRY}/kexpand  -f images/kexpand/Dockerfile .
