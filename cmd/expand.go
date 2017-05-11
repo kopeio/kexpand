@@ -1,22 +1,22 @@
 package cmd
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 
-	"encoding/base64"
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"github.com/kopeio/kexpand/pkg/source"
 	"github.com/spf13/cobra"
-	"path"
-	"encoding/json"
 )
 
 type ExpandCmd struct {
@@ -70,13 +70,25 @@ func (c *ExpandCmd) Run(args []string) error {
 		if err != nil {
 			return fmt.Errorf("error reading from stdin: %v", err)
 		}
-	} else if len(args) == 1 {
-		src, err = ioutil.ReadFile(args[0])
-		if err != nil {
-			return fmt.Errorf("error reading file %q: %v", args[0], err)
-		}
 	} else {
-		return fmt.Errorf("expected exactly one argument, a path to a file to expand")
+		for argi, filepattern := range args {
+			files, err := filepath.Glob(filepattern)
+			if err != nil {
+				return fmt.Errorf("error bad pattern %q: %v", filepattern, err)
+			}
+			for filei, file := range files {
+				filesrc, err := ioutil.ReadFile(file)
+				if err != nil {
+					return fmt.Errorf("error reading file %q: %v", file, err)
+				}
+				if argi == 0 && filei == 0 {
+					src = filesrc
+				} else {
+					filesrc = append([]byte("\n---\n"), filesrc...)
+					src = append(src, filesrc...)
+				}
+			}
+		}
 	}
 
 	expanded, err := c.DoExpand(src, values)

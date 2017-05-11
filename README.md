@@ -112,6 +112,12 @@ not recommended for use.
 ## Variable names
 Variables names can include any alphanumeric character along with hypens(-), period(.), and underscores(_).
 
+## Multiple files
+kexpand supprts passing multiple files and wildcards for templates to specify multiple files at once. kexpand will add `---` 
+between each filename as required by kubectl.
+
+`kexpand *.tmpl.yaml -f values.yaml`
+
 ## Base64 support.
 Base64 encoding of values is supported by adding `|base64` to the key as in `$(key|base64)`, `$((key|base64))`, and `{{keyi|base64}}`.  This
 is useful for secret definitions.
