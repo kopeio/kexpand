@@ -28,6 +28,8 @@ type ExpandCmd struct {
 
 	IgnoreMissingFiles bool
 	IgnoreMissingKeys  bool
+
+	LookupEnvironment  bool
 }
 
 var expandCmd = ExpandCmd{
@@ -46,6 +48,7 @@ func init() {
 	cmd.Flags().StringSliceVarP(&expandCmd.Values, "value", "k", nil, "key=value pairs to substitute")
 	cmd.Flags().BoolVarP(&expandCmd.IgnoreMissingFiles, "ignore-missing-files", "i", false, "ignore source files that are not found")
 	cmd.Flags().BoolVar(&expandCmd.IgnoreMissingKeys, "ignore-missing-keys", false, "ignore missing value keys that are not found")
+	cmd.Flags().BoolVarP(&expandCmd.LookupEnvironment, "lookup-environment", "e", false, "lookup environment variables when values are missing")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		err := expandCmd.Run(args)
 		if err != nil {
@@ -182,6 +185,8 @@ func (c *ExpandCmd) DoExpand(src []byte, values map[string]interface{}) ([]byte,
 		expr := `\$(\({1,2})([[:alnum:]_\.\-]+)(\|[[:alnum:]]+)?\){1,2}|(\{{2})([[:alnum:]_\.\-]+)(\|[[:alnum:]]+)?\}{2}`
 		re := regexp.MustCompile(expr)
 		expandFunction := func(match []byte) []byte {
+			var replacement interface{}
+
 			re := regexp.MustCompile(expr)
 
 			matchStr := string(match[:])
@@ -196,7 +201,13 @@ func (c *ExpandCmd) DoExpand(src []byte, values map[string]interface{}) ([]byte,
 			}
 
 			key := result[2] + result[5]
-			replacement := values[key]
+			replacement = values[key]
+
+			if replacement == nil && c.LookupEnvironment == true {
+				if value, ok := os.LookupEnv(key); ok {
+					replacement = value
+				}
+			}
 
 			if replacement == nil {
 				if c.IgnoreMissingKeys == false {
