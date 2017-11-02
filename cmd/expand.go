@@ -182,6 +182,8 @@ func (c *ExpandCmd) DoExpand(src []byte, values map[string]interface{}) ([]byte,
 		expr := `\$(\({1,2})([[:alnum:]_\.\-]+)(\|[[:alnum:]]+)?\){1,2}|(\{{2})([[:alnum:]_\.\-]+)(\|[[:alnum:]]+)?\}{2}`
 		re := regexp.MustCompile(expr)
 		expandFunction := func(match []byte) []byte {
+			var replacement interface{}
+
 			re := regexp.MustCompile(expr)
 
 			matchStr := string(match[:])
@@ -196,13 +198,17 @@ func (c *ExpandCmd) DoExpand(src []byte, values map[string]interface{}) ([]byte,
 			}
 
 			key := result[2] + result[5]
-			replacement := values[key]
 
-			if replacement == nil {
-				if c.IgnoreMissingKeys == false {
-					err = fmt.Errorf("Key not found: %q", key)
+			if value, ok := os.LookupEnv(key); ok {
+				replacement = value
+			} else {
+				replacement = values[key]
+				if replacement == nil {
+					if c.IgnoreMissingKeys == false {
+						err = fmt.Errorf("Key not found: %q", key)
+					}
+					return match
 				}
-				return match
 			}
 
 			pipeFunction := result[3] + result[6]
